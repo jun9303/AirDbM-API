@@ -82,11 +82,13 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 
 ### Return Value
 
-| Condition | Return Type | Description |
+`TestAirfoils` always returns a list of `AirfoilEvaluationResult` objects (length `N`), where each element contains:
+
+| Field | Type | Description |
 |---|---|---|
-| `xfoil_evaluation=False` | `list[Airfoil]` | Returns `N` generated airfoil geometry objects. |
-| `xfoil_evaluation=True`, `m=1` | `list[float]` | Returns `N` single-objective values: `Cl/Cd_max`. |
-| `xfoil_evaluation=True`, `m=2` | `list[list[float, float]]` | Returns `N` bi-objective values: `[Cl/Cd_max, delta_alpha]`. |
+| `.airfoil` | `Airfoil` | Generated morphed airfoil object (always available). |
+| `.xfoil_result` | `dict \| None` | Raw XFOIL metrics dictionary when `xfoil_evaluation=True`; otherwise `None`. |
+| `.objectives` | `None \| float \| list[float]` | `None` if `xfoil_evaluation=False`; with evaluation enabled: `m=1 -> Cl/Cd_max`, `m=2 -> [Cl/Cd_max, delta_alpha]`. |
 
 Where:
 
@@ -125,7 +127,11 @@ args = {
 results = TestAirfoils(candidate_weights, args=args, m=2)
 
 for i, res in enumerate(results):
-    print(f"Candidate {i+1} -> Cl/Cd max: {res[0]:.2f}, Stall Margin (deg): {res[1]:.2f}")
+    cl_cd_max, delta_alpha = res.objectives
+    print(
+        f"Candidate {i+1} ({res.airfoil.name}) -> "
+        f"Cl/Cd max: {cl_cd_max:.2f}, Stall Margin (deg): {delta_alpha:.2f}"
+    )
 ~~~
 
 ## Customizing Airfoil DbM

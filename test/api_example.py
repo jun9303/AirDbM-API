@@ -27,4 +27,8 @@ args = {
 results = TestAirfoils(candidate_weights, args=args, m=2)
 
 for i, res in enumerate(results):
-    print(f"Candidate {i+1} -> Cl/Cd max: {res[0]:.2f}, Stall Margin (deg): {res[1]:.2f}")
+    cl_cd_max, delta_alpha = (res.objectives if isinstance(res.objectives, list) else [np.nan, np.nan])
+    print(
+        f"Candidate {i+1} ({res.airfoil.name}) -> "
+        f"Cl/Cd max: {cl_cd_max:.2f}, Stall Margin (deg): {delta_alpha:.2f}"
+    )

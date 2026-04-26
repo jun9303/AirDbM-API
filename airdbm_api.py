@@ -914,37 +914,59 @@ def _evaluate_single_candidate(
 
     return morphed_airfoil
 
-def _format_testairfoils_output(airfoils: list[Airfoil], xfoil_evaluation: bool, m: int) -> list:
-    """
-    Return airfoil objects when XFOIL evaluation is disabled.
-    Return objective values derived from attached XFOIL results when enabled.
-    """
-    if not xfoil_evaluation:
-        return airfoils
+class AirfoilEvaluationResult:
+    """Container for a generated airfoil and optional XFOIL-derived outputs."""
 
+    def __init__(
+        self,
+        airfoil: Airfoil,
+        xfoil_result: dict | None = None,
+        objectives: float | list[float] | None = None,
+    ):
+        self.airfoil = airfoil
+        self.xfoil_result = xfoil_result
+        self.objectives = objectives
+
+
+def _extract_objectives_from_xfoil_result(xfoil_result: dict, m: int) -> float | list[float]:
     if m not in (1, 2):
         raise ValueError("When xfoil_evaluation=True, only m=1 or m=2 are currently supported.")
 
-    outputs = []
+    cl_cd_max_raw = xfoil_result.get('cl_cd_max', np.nan)
+    delta_alpha_raw = xfoil_result.get('delta_alpha', np.nan)
+
+    cl_cd_max = np.nan if cl_cd_max_raw is None else float(cl_cd_max_raw)
+    delta_alpha = np.nan if delta_alpha_raw is None else float(delta_alpha_raw)
+
+    if m == 1:
+        return cl_cd_max
+    return [cl_cd_max, delta_alpha]
+
+
+def _format_testairfoils_output(
+    airfoils: list[Airfoil],
+    xfoil_evaluation: bool,
+    m: int,
+) -> list[AirfoilEvaluationResult]:
+    """
+    Always return container objects so callers can access generated airfoils.
+    When XFOIL is enabled, objective values are populated from attached XFOIL results.
+    """
+    outputs: list[AirfoilEvaluationResult] = []
     for airfoil in airfoils:
-        xr = airfoil.xfoil_result or {}
-        cl_cd_max_raw = xr.get('cl_cd_max', np.nan)
-        delta_alpha_raw = xr.get('delta_alpha', np.nan)
+        xr = airfoil.xfoil_result if xfoil_evaluation else None
+        objectives = None
+        if xfoil_evaluation:
+            objectives = _extract_objectives_from_xfoil_result(xr or {}, m)
 
-        cl_cd_max = np.nan if cl_cd_max_raw is None else float(cl_cd_max_raw)
-        delta_alpha = np.nan if delta_alpha_raw is None else float(delta_alpha_raw)
-
-        if m == 1:
-            outputs.append(cl_cd_max)
-        else:
-            outputs.append([cl_cd_max, delta_alpha])
+        outputs.append(AirfoilEvaluationResult(airfoil=airfoil, xfoil_result=xr, objectives=objectives))
 
     return outputs
 
 # =============================================================================
 # MAIN API: TestAirfoils
 # =============================================================================
-def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list:
+def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list[AirfoilEvaluationResult]:
     """
     Test function for generating DbM airfoils based on an N x D candidate matrix.
     
@@ -976,12 +998,14 @@ def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list:
     - m: Number of objectives (1 for Cl/Cd <single objective>, 2 for Cl/Cd and delta alpha <bi-objective>).
     
     Returns:
-    - If xfoil_evaluation is False:
-        airfoils: A list of N generated Airfoil objects containing interpolated coordinates.
-                  The airfoil names strictly map to w1_w2_..._wn format.
-    - If xfoil_evaluation is True:
-        m=1 -> list[float] of Cl/Cd_max
-        m=2 -> list[[Cl/Cd_max, delta_alpha]]
+    - A list of AirfoilEvaluationResult objects of length N.
+      Each element provides:
+        - .airfoil: generated Airfoil object (always available)
+        - .xfoil_result: raw XFOIL metrics dict when xfoil_evaluation=True, else None
+        - .objectives:
+            - None when xfoil_evaluation=False
+            - m=1 -> Cl/Cd_max (float)
+            - m=2 -> [Cl/Cd_max, delta_alpha]
     """
     if args is None:
         args = {}

@@ -71,6 +71,8 @@ def _run_case(candidate_weights: np.ndarray, workers: int, base_args: dict, m: i
 
 
 def _format_result(value) -> str:
+    if hasattr(value, 'objectives'):
+        value = value.objectives
     if isinstance(value, (list, tuple, np.ndarray)):
         values = np.asarray(value, dtype=float).tolist()
         return "[" + ", ".join(f"{v:.6g}" for v in values) + "]"
@@ -146,7 +148,7 @@ def run_scaling_tests() -> None:
         # Accumulate hot basis results for this worker count
         if len(results) >= D_DIMENSIONS:
             for i in range(D_DIMENSIONS):
-                weak_hot_basis_records.append((i, workers, results[i]))
+                weak_hot_basis_records.append((i, workers, results[i].objectives))
 
     print()
     print("=== Strong Scaling (fixed total candidates) ===")
@@ -175,7 +177,7 @@ def run_scaling_tests() -> None:
         # Accumulate hot basis results for this worker count
         if len(results) >= D_DIMENSIONS:
             for i in range(D_DIMENSIONS):
-                strong_hot_basis_records.append((i, workers, results[i]))
+                strong_hot_basis_records.append((i, workers, results[i].objectives))
 
     # --- PRINT STORED HOT BASIS RESULTS AT THE END ---
     print("\n" + "="*60)
