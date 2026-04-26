@@ -70,7 +70,7 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 | `alfa_start` | `float` | `0.0` | Start angle of attack (deg) for scans. |
 | `alfa_end` | `float` | `45.0` | End angle of attack (deg) for scans. |
 | `reynolds` | `float` | `1e6` | Reynolds number for viscous analysis. |
-| `mach` | `float` | `0.0` | Mach number; 0.0 indicates a negligible-compressibility assumption. |
+| `mach` | `float` | `0.0` | Mach number; `0.0` indicates a negligible-compressibility assumption. |
 | `n_crit` | `float` | `9.0` | e^N transition amplification factor. |
 
 **MULTIPROCESSING ARGS**
@@ -90,7 +90,14 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 | `.xfoil_result` | `dict \| None` | Raw XFOIL metrics dictionary when `xfoil_evaluation=True`; otherwise `None`. |
 | `.objectives` | `None \| float \| list[float]` | `None` if `xfoil_evaluation=False`; with evaluation enabled: `m=1 -> Cl/Cd_max`, `m=2 -> [Cl/Cd_max, delta_alpha]`. |
 
-Where:
+The `.airfoil` object exposes both geometry data and helper methods, for example:
+
+- metadata: `.airfoil.airfoil_id`, `.airfoil.name`
+- geometry arrays: `.airfoil.x_raw`, `.airfoil.y_raw`
+- access helpers: `.airfoil.get_raw_coordinates()`
+- quick visualization: `.airfoil.plot(save_path=...)`
+
+As for the objectives,
 
 $$
 \left(\frac{C_l}{C_d}\right)_{\max}
