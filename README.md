@@ -66,7 +66,7 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 | `xfoil_backend` | `str` | `'apptainer'` | XFOIL execution backend: `'apptainer'`, `'native'`, or `'auto'`. |
 | `xfoil_iter` | `int` | `200` | Max XFOIL iterations per alpha step. |
 | `xfoil_timeout` | `float` | `60.0` | Timeout (seconds) per run by default. Set `0.0` for no timeout. |
-| `xfoil_retry` | `int` | `1` | Number of XFOIL reattempts for a candidate. This helps recover transient deadlock/no-parse behavior in multiprocessing, where a design may still converge in another attempt. |
+| `xfoil_retry` | `int` | `1` | Number of XFOIL reattempts for a candidate. This helps recover transient deadlock/no-parse behavior in multiprocessing, where a design may normally converge in another attempt. |
 | `xfoil_strict` | `bool` | `True` | If `True`, raise on XFOIL errors; otherwise attach errors in the result payload. |
 | `alfa_start` | `float` | `0.0` | Start angle of attack (deg) for scans. |
 | `alfa_end` | `float` | `45.0` | End angle of attack (deg) for scans. |
