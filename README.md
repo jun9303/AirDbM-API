@@ -151,3 +151,44 @@ args = {
     ],
 }
 ~~~
+
+## Parallel Scaling Test
+
+The parallel airfoil design and evaluation performance of `TestAirfoils` was benchmarked using the script in `test/scaling_test.py`.
+
+### Computing Environment
+
+- HPC Platform: RCAC Anvil
+- Node type: Two 64-core AMD EPYC Milan processors @ 2.45 GHz (128 cores in total)
+- Objective mode: `m=2` (multi-objective)
+- Worker counts tested: `1` (serial), `2, 4, 8, 16, 32, 64, 128`
+
+### Weak Scaling
+
+Design candidates per worker: `12`
+
+| workers | candidates | time (sec) | throughput (eval/sec) |
+|---:|---:|---:|---:|
+| 1 | 12 | 132.796 | 0.09 |
+| 2 | 24 | 132.253 | 0.18 |
+| 4 | 48 | 131.756 | 0.36 |
+| 8 | 96 | 132.335 | 0.73 |
+| 16 | 192 | 133.615 | 1.44 |
+| 32 | 384 | 135.916 | 2.83 |
+| 64 | 768 | 145.104 | 5.29 |
+| 128 | 1536 | 182.200 | 8.43 |
+
+### Strong Scaling
+
+Total design candidates: `384`
+
+| workers | candidates | time (sec) | speedup | efficiency |
+|---:|---:|---:|---:|---:|
+| 1 | 384 | 4022.381 | 1.00 | 1.000 |
+| 2 | 384 | 2028.587 | 1.98 | 0.991 |
+| 4 | 384 | 1022.814 | 3.93 | 0.983 |
+| 8 | 384 | 520.295 | 7.73 | 0.966 |
+| 16 | 384 | 264.426 | 15.21 | 0.951 |
+| 32 | 384 | 137.485 | 29.26 | 0.914 |
+| 64 | 384 | 75.502 | 53.28 | 0.832 |
+| 128 | 384 | 53.065 | 75.80 | 0.592 |
