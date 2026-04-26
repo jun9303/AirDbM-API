@@ -902,13 +902,39 @@ def _evaluate_single_candidate(
 
     if xfoil_config.get('xfoil_evaluation', False):
         strict = bool(xfoil_config.get('xfoil_strict', True))
-        try:
-            morphed_airfoil.xfoil_result = run_xfoil_evaluation(morphed_airfoil, xfoil_config, m)
-        except Exception as exc:
-            if strict:
-                raise
+        retry_count = max(0, int(xfoil_config.get('xfoil_retry', 1)))
+
+        def _is_empty_polar(metrics: dict | None) -> bool:
+            if not metrics:
+                return True
+            return (
+                len(metrics.get('alpha', [])) == 0
+                and len(metrics.get('cl', [])) == 0
+                and len(metrics.get('cd', [])) == 0
+            )
+
+        last_exc = None
+        for attempt in range(retry_count + 1):
+            try:
+                metrics = run_xfoil_evaluation(morphed_airfoil, xfoil_config, m)
+                if _is_empty_polar(metrics) and attempt < retry_count:
+                    continue
+                morphed_airfoil.xfoil_result = metrics
+                break
+            except Exception as exc:
+                last_exc = exc
+                if attempt < retry_count:
+                    continue
+                if strict:
+                    raise
+                morphed_airfoil.xfoil_result = {
+                    'error': str(exc),
+                    'runner': None,
+                }
+
+        if morphed_airfoil.xfoil_result is None and last_exc is not None and not strict:
             morphed_airfoil.xfoil_result = {
-                'error': str(exc),
+                'error': str(last_exc),
                 'runner': None,
             }
 
@@ -986,6 +1012,7 @@ def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list[AirfoilEv
                 - 'apptainer_image': Path to apptainer image containing xfoil (default: XFOIL_APP).
                 - 'xfoil_iter': Max XFOIL iterations per alpha (default: 200).
                 - 'xfoil_timeout': Timeout in seconds per candidate (default: 60.0).
+                - 'xfoil_retry': Number of reattempts when no polar points are parsed at all (default: 1).
                 - 'xfoil_strict': If True, fail on XFOIL errors; if False, attach error in airfoil.xfoil_result.
                 - 'alfa_start', 'alfa_end': Polar angle range (defaults: 0, 45).
                 - 'reynolds': Reynolds number (defaults to REYNOLDS).
@@ -1031,6 +1058,7 @@ def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list[AirfoilEv
         'repanel_n': args.get('repanel_n', 160),
         'xfoil_iter': args.get('xfoil_iter', 200),
         'xfoil_timeout': args.get('xfoil_timeout', 60.0),
+        'xfoil_retry': args.get('xfoil_retry', 1),
         'xfoil_strict': args.get('xfoil_strict', True),
     }
     
