@@ -4,7 +4,9 @@ This repository provides a highly robust, parallelized Python interface (`airdbm
 
 This API is reprocessed from the original [AirDbM](https://github.com/UCBCFD/DbMAirfoilOpt) repository and adapted into a standalone Python workflow for robust batch evaluation.
 
-If this repository contributes to your research, publication, or benchmark, we kindly ask that you credit our work by citing our AirDbM research references; see the [Citations](#citations) section.
+If this repository contributes to your research, publication, or benchmark, we kindly ask that you credit our work by citing our AirDbM research references:
+- Lee, S. & Sheikh, H. M. (2026). Airfoil Optimization using Design-by-Morphing with Minimized Design-Space Dimensionality. *Journal of Computational Design and Engineering*, 13(1), 108-124. [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fjcde%2Fqwaf124-blue)](https://doi.org/10.1093/jcde/qwaf124)
+- Sheikh, H. M., Lee, S., Wang, J., & Marcus, P. S. (2023). Airfoil Optimization using Design-by-Morphing. *Journal of Computational Design and Engineering*, 10(4), 1443–1459. [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fjcde%2Fqwad059-blue)](https://doi.org/10.1093/jcde/qwad059)
 
 ## Setup & Installation
 
@@ -149,10 +151,3 @@ args = {
     ],
 }
 ~~~
-
-## Citations
-
-If you use this API repository, please cite the following works:
-
-- Lee, S. & Sheikh, H. M. (2026). *Airfoil Optimization using Design-by-Morphing with Minimized Design-Space Dimensionality*. *Journal of Computational Design and Engineering*, 13(1), 108-124. [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fjcde%2Fqwaf124-blue)](https://doi.org/10.1093/jcde/qwaf124)
-- Sheikh, H. M., Lee, S., Wang, J., & Marcus, P. S. (2023). *Airfoil Optimization using Design-by-Morphing*. *Journal of Computational Design and Engineering*, 10(4), 1443–1459. [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fjcde%2Fqwad059-blue)](https://doi.org/10.1093/jcde/qwad059)
