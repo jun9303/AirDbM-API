@@ -1,0 +1,22 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%post
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        xfoil \
+        xvfb \
+        xauth \
+        xfonts-base \
+        xfonts-100dpi \
+        xfonts-75dpi \
+        ca-certificates
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+%environment
+    export PATH=/usr/bin:$PATH
+
+%runscript
+    # The -a flag automatically finds a free display number, preventing collisions
+    exec xvfb-run -a -s "-screen 0 640x480x8" xfoil "$@"

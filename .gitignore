@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Large binaries to be built
+bin/xfoil-ubuntu22.sif
+airfoilDB/_db.pkl
+
+# OS/editor specific files
+.DS_Store
+.vscode/
