@@ -88,8 +88,18 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 
 Where:
 
-- $\left({C_{l}/C_{d}}\right)_{max} = \max_{\alpha}\left(\frac{C_{l}(\alpha)}{C_{d}(\alpha)}\right)$, i.e., the maximum lift-to-drag ratio over the evaluated angle-of-attack sweep.
-- $\Delta\alpha = \alpha_{stall} - \alpha_{(C_{l}/C_{d})_{max}}$, where $\alpha_{stall}$ is defined here as the stall angle at which $C_{l}$ reaches its first local maximum (from $\alpha = 0$) in the computed polar.
+$$
+\left(\frac{C_l}{C_d}\right)_{\max}
+= \max_{\alpha}\left(\frac{C_l(\alpha)}{C_d(\alpha)}\right)
+$$
+
+This is the maximum lift-to-drag ratio over the evaluated angle-of-attack sweep.
+
+$$
+\Delta\alpha = \alpha_{\mathrm{stall}} - \alpha_{\left(\frac{C_l}{C_d}\right)_{\max}}
+$$
+
+Here, $\alpha_{\mathrm{stall}}$ is defined as the first local maximum of $C_l$ while marching from low angle of attack (starting at $\alpha = 0$) in the computed polar.
 
 ### Python Script Example
 
