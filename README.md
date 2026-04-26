@@ -43,7 +43,7 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 
 | Name | Type | Default | Description |
 |---|---|---|---|
-| `x` | `np.ndarray` | Required | Candidate matrix of shape `N x D`, where each candidate parameter is typically in `[0.0, 1.0]`. |
+| `x` | `np.ndarray` | Required | Candidate matrix of shape `N x D` (`N` candidates with `D` parameters); each entry is in `[0.0, 1.0]`. |
 | `args` | `dict` | `{}` | Configuration dictionary for DbM generation, parallelism, and XFOIL execution (see table below). |
 | `m` | `int` | `2` | Number of objectives to return when XFOIL is enabled. Supported: `1` or `2`. |
 
@@ -55,7 +55,7 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 |---|---|---|---|
 | `airfoil_db_dir` | `str` | `'airfoilDB'` | Path to the airfoil database folder. |
 | `dbm_baselines` | `list[str]` | Internal `EXPECTED_BASELINES` list | Baseline airfoil names. First `D` entries are used for a candidate with `D` parameters. The internal list is based on the optimal baseline set reported in our [2026 paper](https://doi.org/10.1093/jcde/qwaf124). |
-| `dbm_weight_range` | `list[float]` | `[-1.0, 1.0]` | Maps input `x` from `[0.0, 1.0]` to morphing weights. |
+| `dbm_weight_range` | `list[float]` | `[-1.0, 1.0]` | Maps input `x` linearly from `[0.0, 1.0]` to morphing weights. |
 | `dbm_normalization` | `str \| None` | `None` | Weight normalization mode: `None`, `'SUM'`, or `'ABS_SUM'`. |
 
 **AIRFOIL EVALUATION ARGS**
