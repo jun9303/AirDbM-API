@@ -902,6 +902,9 @@ def _evaluate_single_candidate(
 
     if xfoil_config.get('xfoil_evaluation', False):
         strict = bool(xfoil_config.get('xfoil_strict', True))
+        # Give transient no-parse runs another chance. In heavily parallel runs,
+        # XFOIL can occasionally deadlock or stall I/O and produce empty polar files
+        # even when the same design converges in other attempts.
         retry_count = max(0, int(xfoil_config.get('xfoil_retry', 1)))
 
         def _is_empty_polar(metrics: dict | None) -> bool:
@@ -1013,6 +1016,8 @@ def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list[AirfoilEv
                 - 'xfoil_iter': Max XFOIL iterations per alpha (default: 200).
                 - 'xfoil_timeout': Timeout in seconds per candidate (default: 60.0).
                 - 'xfoil_retry': Number of reattempts when no polar points are parsed at all (default: 1).
+                    Useful for transient XFOIL deadlock/no-parse cases that can occur in multiprocessing,
+                    even when the design itself converges in other runs.
                 - 'xfoil_strict': If True, fail on XFOIL errors; if False, attach error in airfoil.xfoil_result.
                 - 'alfa_start', 'alfa_end': Polar angle range (defaults: 0, 45).
                 - 'reynolds': Reynolds number (defaults to REYNOLDS).
