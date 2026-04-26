@@ -93,7 +93,7 @@ TestAirfoils(x: np.ndarray, args: dict | None = None, m: int = 2) -> list
 
 The `.airfoil` object exposes both geometry data and helper methods, for example:
 
-- metadata: `.airfoil.airfoil_id`, `.airfoil.name`
+- metadata: `.airfoil.name` (DbM weight inputs by default)
 - geometry arrays: `.airfoil.x_raw`, `.airfoil.y_raw`
 - access helpers: `.airfoil.get_raw_coordinates()`
 - quick visualization: `.airfoil.plot(save_path=...)`

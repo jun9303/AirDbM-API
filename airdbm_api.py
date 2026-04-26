@@ -390,6 +390,8 @@ def _compute_polar_metrics(
     cl_cd = np.clip(cl_cd, a_min=None, a_max=MAX_REALISTIC_CLCD)
 
     # Smooth peak-related signals on valid polar entries to reduce zig-zag noise in alpha marching.
+    # Note: The returned objective still reflects the peak index selected from the smoothed traces,
+    # while the raw polar arrays in the result remain unchanged for inspection.
     cl_smooth = cl.copy()
     cl_cd_smooth = cl_cd.copy()
     valid_indices = np.where(valid)[0]
@@ -403,6 +405,8 @@ def _compute_polar_metrics(
             cl_smooth[valid_indices] = savgol_filter(cl[valid_indices], window_size, poly_order)
             cl_cd_smooth[valid_indices] = savgol_filter(cl_cd[valid_indices], window_size, poly_order)
 
+    # Note: Peak selection is intentionally based on the smoothed lift-to-drag curve to avoid
+    # reporting a narrow raw-sample spike from noisy marching behavior.
     idx_best = int(np.nanargmax(cl_cd_smooth))
     alpha_best = float(alpha[idx_best])
     idx_cl_max = int(np.argmax(cl_smooth))
