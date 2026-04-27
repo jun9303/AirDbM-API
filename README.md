@@ -4,7 +4,7 @@ This repository provides a highly robust, parallelized Python interface (`airdbm
 This API is reprocessed from the original [AirDbM](https://github.com/UCBCFD/DbMAirfoilOpt) repository and adapted into a standalone Python workflow for robust batch evaluation.
 
 <p align="center">
-  <img width="640" alt="barycentric_airdbm" src="https://github.com/user-attachments/assets/bb92cbfc-e583-450d-9570-537c9ae0de72"/>
+  <kdb> <img width="640" alt="barycentric_airdbm" src="https://github.com/user-attachments/assets/bb92cbfc-e583-450d-9570-537c9ae0de72"/> </kdb>
 </p>
 
 If this repository contributes to your research, publication, or benchmark, we kindly ask that you credit our work by citing our AirDbM research references:
