@@ -1,8 +1,11 @@
 # AirDbM-API
-
 This repository provides a highly robust, parallelized Python interface (`airdbm_api.py`) for generating morphed airfoil geometries using Design-by-Morphing (DbM) and evaluating them dynamically via XFOIL. 
 
 This API is reprocessed from the original [AirDbM](https://github.com/UCBCFD/DbMAirfoilOpt) repository and adapted into a standalone Python workflow for robust batch evaluation.
+
+<p align="center">
+  <img width="640" alt="barycentric_airdbm" src="https://github.com/user-attachments/assets/bb92cbfc-e583-450d-9570-537c9ae0de72"/>
+</p>
 
 If this repository contributes to your research, publication, or benchmark, we kindly ask that you credit our work by citing our AirDbM research references:
 - Lee, S. & Sheikh, H. M. (2026). Airfoil Optimization using Design-by-Morphing with Minimized Design-Space Dimensionality. *Journal of Computational Design and Engineering*, 13(1), 108-124. [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fjcde%2Fqwaf124-blue)](https://doi.org/10.1093/jcde/qwaf124)
