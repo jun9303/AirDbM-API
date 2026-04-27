@@ -13,7 +13,7 @@ from airdbm_api import TestAirfoils
 x = np.array([[2/3] * 3]) # Equal-weight interpolative morphing
 results = TestAirfoils(x) # Call the AirDbM API (design & eval)
 
-cl_cd_max, ~ = results[0].objectives
+cl_cd_max, _ = results[0].objectives
 print(f"Cl/Cd max: {cl_cd_max:.2f}") # >>>>>>> Cl/Cd max: 54.98
 ~~~
 
