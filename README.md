@@ -6,6 +6,17 @@
   </kbd> 
 </div><br/>
 
+~~~python
+import numpy as np
+from airdbm_api import TestAirfoils
+
+x = np.array([[2/3] * 3]) # Equal-weight interpolative morphing
+results = TestAirfoils(x) # Call the AirDbM API (design & eval)
+
+cl_cd_max, ~ = results[0].objectives
+print(f"Cl/Cd max: {cl_cd_max:.2f}") # >>>>>>> Cl/Cd max: 54.98
+~~~
+
 This repository provides a highly robust, parallelized Python interface (`airdbm_api.py`) for generating morphed airfoil geometries using Design-by-Morphing (DbM) and evaluating them dynamically via XFOIL. 
 
 This API is reprocessed from the original [AirDbM](https://github.com/UCBCFD/DbMAirfoilOpt) repository and adapted into a standalone Python workflow for robust batch evaluation.
