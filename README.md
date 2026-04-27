@@ -130,7 +130,7 @@ $$
 
 Here, $\alpha_{\mathrm{stall}}$ is defined as the first local maximum of $C_l$ while marching from low angle of attack (starting at $\alpha = 0$) in the computed polar.
 
-### Python Script Example
+### API Example
 
 ~~~python
 import numpy as np
