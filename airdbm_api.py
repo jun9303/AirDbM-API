@@ -411,15 +411,16 @@ def _compute_polar_metrics(
     alpha_best = float(alpha[idx_best])
     idx_cl_max = int(np.argmax(cl_smooth))
 
-    # Conservative stall definition: first local Cl maximum while marching alpha upward.
+    # Conservative stall definition: first local Cl maximum while marching alpha upward starting from the peak lift-to-drag ratio.
     idx_stall = None
     if cl_smooth.size >= 3:
-        for i in range(1, len(cl_smooth) - 1):
+        start_idx = max(1, idx_best)
+        for i in range(start_idx, len(cl_smooth) - 1):
             if cl_smooth[i] > cl_smooth[i - 1] and cl_smooth[i] >= cl_smooth[i + 1]:
                 idx_stall = i
                 break
     if idx_stall is None:
-        idx_stall = idx_cl_max
+        idx_stall = max(idx_best, idx_cl_max)
 
     alpha_stall = float(alpha[idx_stall])
     raw_delta_alpha = float(alpha_stall - alpha_best)
@@ -902,7 +903,8 @@ def _evaluate_single_candidate(
             raise ValueError("Sum of absolute weights is too close to zero for normalization.")
 
     morphed_airfoil = create_morphed_airfoil(weights, baselines, correct_geometry=True)
-    morphed_airfoil.name = "_".join(f"{w:.4f}" for w in weights)
+    # Format weights to 2 decimals and limit name to 70 characters (Fortran limit)
+    morphed_airfoil.name = "_".join(f"{w:.2f}" for w in weights)[:70]
 
     if xfoil_config.get('xfoil_evaluation', False):
         strict = bool(xfoil_config.get('xfoil_strict', True))
