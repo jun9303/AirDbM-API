@@ -37,7 +37,6 @@ X_INTERP_HALF_ASC: np.ndarray = 0.5 * (1.0 - np.cos(THETA_HALF))[1:]
 X_INTERP_HALF_DESC: np.ndarray = (0.5 * (1.0 - np.cos(THETA_HALF)))[::-1]
 X_INTERP: np.ndarray = np.concatenate((X_INTERP_HALF_DESC, X_INTERP_HALF_ASC))
 
-# Assuming flat directory structure for the minimal package
 DATA_FOLDER: str = 'airfoilDB'
 
 # Updated Default Expected Baselines order
@@ -1060,7 +1059,7 @@ def TestAirfoils(x: np.ndarray, args: dict = None, m: int = 2) -> list[AirfoilEv
     xfoil_config = {
         'xfoil_evaluation': args.get('xfoil_evaluation', True),
         'xfoil_backend': args.get('xfoil_backend', 'apptainer'),
-        'apptainer_image': args.get('apptainer_image', 'bin/xfoil-ubuntu22.sif'),
+        'apptainer_image': args.get('apptainer_image', XFOIL_APP),
         'reynolds': args.get('reynolds', REYNOLDS),
         'mach': args.get('mach', MACH),
         'n_crit': args.get('n_crit', N_CRIT),

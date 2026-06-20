@@ -13,3 +13,7 @@ airfoilDB/_db.pkl
 # OS/editor specific files
 .DS_Store
 .vscode/
+
+# Build and packaging directories
+build_wheel.py
+dist/
