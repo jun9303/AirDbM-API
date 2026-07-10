@@ -9,6 +9,7 @@ __pycache__/
 # Large binaries to be built
 bin/xfoil-ubuntu22.sif
 airfoilDB/_db.pkl
+airfoilDB/_db.*.pkl.tmp
 
 # OS/editor specific files
 .DS_Store
@@ -17,3 +18,13 @@ airfoilDB/_db.pkl
 # Build and packaging directories
 build_wheel.py
 dist/
+
+# Academic drafting / manuscript / benchmark material (not part of the API release)
+.academic-drafting/
+paper/
+paper_software/
+test/am_moo/
+test/benchmark/
+test/academic_style.py
+test/plot_*.py
+.verify_tmp/

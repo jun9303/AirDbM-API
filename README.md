@@ -128,7 +128,7 @@ $$
 \Delta\alpha = \alpha_{\mathrm{stall}} - \alpha_{\left(\frac{C_l}{C_d}\right)_{\max}}
 $$
 
-Here, $\alpha_{\mathrm{stall}}$ is defined as the first local maximum of $C_l$ while marching from low angle of attack (starting at $\alpha = 0$) in the computed polar.
+Here, $\alpha_{\mathrm{stall}}$ is identified as the first local maximum of $C_l$ encountered while marching upward in angle of attack, starting from $\alpha_{\left(C_l/C_d\right)_{\max}}$ (the peak lift-to-drag angle). Because the search begins at the peak-efficiency angle, the stall margin $\Delta\alpha$ is non-negative by construction.
 
 ### Python Script Example
 
@@ -223,3 +223,15 @@ Total design candidates: `384`
 | 32 | 384 | 137.485 | 29.26 | 0.914 |
 | 64 | 384 | 75.502 | 53.28 | 0.832 |
 | 128 | 384 | 53.065 | 75.80 | 0.592 |
+
+## Changelog
+
+### v0.2.1
+
+- **Fixed the parallel `pickle data was truncated` failure that appeared with the full 12-baseline set.** Under multiprocessing, several workers could read the cached airfoil database (`_db.pkl`) while another worker was still writing it, so a worker would occasionally observe a partially written pickle. The database cache is now written **atomically** (staged to a temporary file, then atomically renamed into place), any unreadable or partial cache is transparently rebuilt from the raw `.dat` files instead of raising, and — for `pip`-installed builds — the bundled database is published to its working cache atomically as well. Parallel evaluation across the full baseline set is now robust.
+- **Guaranteed a non-negative stall margin (`delta_alpha`).** The physical non-negativity of the stall margin is now enforced at the objective boundary in addition to the computation site, and sub-degree floating-point noise is snapped to exactly `0.0`, so `delta_alpha` can never be reported as a small negative value.
+- Exposed `airdbm_api.__version__` so an installed build can be identified at runtime.
+
+### v0.2.0
+
+- Baseline release: parallelized Design-by-Morphing airfoil generation with dynamic XFOIL evaluation (`Cl/Cd_max` and stall-margin objectives), Apptainer/native XFOIL backends, and multiprocessing across candidates.

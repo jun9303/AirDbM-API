@@ -28,6 +28,8 @@ except ImportError:
     Polygon = None
     print("Warning: Shapely library not available. Geometry correction will be bypassed.")
 
+__version__ = "0.2.1"
+
 # =============================================================================
 # CONSTANTS & CONFIGURATION
 # =============================================================================
@@ -423,7 +425,11 @@ def _compute_polar_metrics(
 
     alpha_stall = float(alpha[idx_stall])
     raw_delta_alpha = float(alpha_stall - alpha_best)
-    delta_alpha = max(0.0, raw_delta_alpha)
+    # The stall margin is non-negative by construction: stall is searched at or
+    # beyond the peak lift-to-drag angle (idx_stall >= idx_best) on a strictly
+    # ascending alpha grid. Clamp defensively and snap sub-degree floating-point
+    # noise to exactly 0.0 so the reported margin is never a small negative value.
+    delta_alpha = raw_delta_alpha if raw_delta_alpha > 1e-9 else 0.0
 
     return {
         'alpha': alpha.tolist(),
@@ -707,34 +713,128 @@ def interp_airfoil(x_coords: np.ndarray, y_coords: np.ndarray) -> tuple[np.ndarr
     y_interp_combined = np.concatenate((y_interp_upper, y_interp_lower[1:]))
     return X_INTERP, y_interp_combined
 
-def load_airfoil_database_from_files(data_folder: str) -> list[Airfoil]:
-    airfoils_db: list[Airfoil] = []
-    pickle_file_path = os.path.join(data_folder, f'_db.pkl')
+def _load_cached_db(pickle_file_path: str) -> list['Airfoil'] | None:
+    """
+    Load the cached database pickle, returning None when it is missing, empty,
+    or corrupt so the caller can rebuild from the raw .dat files instead.
 
-    if os.path.exists(pickle_file_path):
+    Under multiprocessing, a pickle can be observed while another worker (or a
+    packaged-data copy step) is still writing it, yielding a partially written
+    file. Reading such a file raises 'pickle data was truncated' / EOFError.
+    Treating any unreadable pickle as a cache miss keeps parallel runs robust.
+    """
+    if not os.path.exists(pickle_file_path):
+        return None
+    try:
+        if os.path.getsize(pickle_file_path) == 0:
+            return None
         with open(pickle_file_path, 'rb') as f:
-            airfoils_db = pickle.load(f)
-    else:
-        if os.path.isdir(data_folder):
-            affile_list_raw = os.listdir(data_folder)
-            incompatible_files = {'30p-30n.dat', 'naca1.dat'} 
-            affile_list_filtered = [f for f in affile_list_raw if f not in incompatible_files and f.endswith('.dat')]
+            db = pickle.load(f)
+    except Exception:
+        # Treat ANY failure to read/deserialize as a cache miss so the caller
+        # rebuilds from the raw .dat files rather than crashing. Besides the
+        # common prefix-truncation errors (UnpicklingError/EOFError), a pickle
+        # with corrupted interior bytes can raise MemoryError, TypeError,
+        # OverflowError, IndexError, etc. from a bad length/opcode field.
+        return None
+    if not isinstance(db, list) or not db:
+        return None
+    return db
 
-            for idx, filename in enumerate(sorted(affile_list_filtered)):
-                file_full_path = os.path.join(data_folder, filename)
-                af_name, x_o, y_o = read_airfoil_file(file_full_path)
-                
-                interp_result = interp_airfoil(x_o, y_o) 
-                if interp_result is None: continue
-                
-                _, y_interp = interp_result
-                airfoil_obj = Airfoil(airfoil_id=idx, name=af_name, colloc_vec=y_interp, x_raw=x_o, y_raw=y_o)
-                airfoils_db.append(airfoil_obj)
-                
-        if airfoils_db and not os.path.exists(pickle_file_path):
-            with open(pickle_file_path, 'wb') as f:
-                pickle.dump(airfoils_db, f)
-    
+
+def _build_db_from_dat_files(data_folder: str) -> tuple[list['Airfoil'], bool]:
+    """
+    Rebuild the airfoil database directly from Selig-format .dat files.
+
+    Returns (airfoils_db, complete). 'complete' is False when a .dat file could
+    not be read (e.g. it is still being copied by a concurrent packaged-data
+    populate step); the caller then avoids persisting a partial cache.
+    """
+    airfoils_db: list['Airfoil'] = []
+    if not os.path.isdir(data_folder):
+        return airfoils_db, True
+
+    incompatible_files = {'30p-30n.dat', 'naca1.dat'}
+    affile_list_filtered = [
+        f for f in os.listdir(data_folder)
+        if f not in incompatible_files and f.endswith('.dat')
+    ]
+
+    complete = True
+    for idx, filename in enumerate(sorted(affile_list_filtered)):
+        file_full_path = os.path.join(data_folder, filename)
+        try:
+            af_name, x_o, y_o = read_airfoil_file(file_full_path)
+        except (OSError, ValueError, IndexError):
+            # Unreadable or still being copied: mark the build incomplete so the
+            # result is not cached, then let a later load rebuild the full set.
+            complete = False
+            continue
+
+        interp_result = interp_airfoil(x_o, y_o)
+        if interp_result is None:
+            continue
+
+        _, y_interp = interp_result
+        airfoils_db.append(
+            Airfoil(airfoil_id=idx, name=af_name, colloc_vec=y_interp, x_raw=x_o, y_raw=y_o)
+        )
+
+    return airfoils_db, complete
+
+
+def _atomic_pickle_dump(obj: object, pickle_file_path: str) -> None:
+    """
+    Write a pickle atomically so concurrent readers never observe a partial file.
+
+    The object is written to a uniquely named temp file in the destination
+    directory, flushed and fsynced, then os.replace()'d into place (an atomic
+    rename on POSIX). This eliminates the interleaved/truncated writes that occur
+    when several parallel workers persist the cache at once. Failures here are
+    non-fatal: the in-memory database is already available to the caller.
+    """
+    directory = os.path.dirname(pickle_file_path) or '.'
+    try:
+        fd, tmp_path = tempfile.mkstemp(prefix='_db.', suffix='.pkl.tmp', dir=directory)
+    except OSError:
+        return
+    published = False
+    try:
+        with os.fdopen(fd, 'wb') as f:
+            pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, pickle_file_path)
+        published = True
+    except Exception:
+        # Persisting the cache is best-effort; the in-memory DB is already
+        # available to the caller, so never let a write failure (OSError,
+        # MemoryError, PicklingError, ...) propagate.
+        pass
+    finally:
+        if not published:
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+
+def load_airfoil_database_from_files(data_folder: str) -> list[Airfoil]:
+    pickle_file_path = os.path.join(data_folder, '_db.pkl')
+
+    cached = _load_cached_db(pickle_file_path)
+    if cached is not None:
+        return cached
+
+    # Cache miss (absent, empty, or truncated/corrupt): rebuild from raw files.
+    airfoils_db, complete = _build_db_from_dat_files(data_folder)
+
+    # Persist atomically so subsequent/parallel runs reuse a complete pickle.
+    # Skip persisting a partial build (some .dat file was unreadable) so the
+    # cache is never poisoned with an incomplete database.
+    if airfoils_db and complete:
+        _atomic_pickle_dump(airfoils_db, pickle_file_path)
+
     return airfoils_db
 
 def get_baselines(data_folder: str, expected_names: list[str]) -> list[Airfoil]:
@@ -971,6 +1071,13 @@ def _extract_objectives_from_xfoil_result(xfoil_result: dict, m: int) -> float |
 
     cl_cd_max = np.nan if cl_cd_max_raw is None else float(cl_cd_max_raw)
     delta_alpha = np.nan if delta_alpha_raw is None else float(delta_alpha_raw)
+
+    # Defense-in-depth: the stall margin is physically non-negative, so enforce
+    # that guarantee again at the objective boundary. This shields the objective
+    # actually consumed by an optimizer from any upstream numerical noise (or a
+    # stale/foreign metrics dict) that might carry a small negative value.
+    if not np.isnan(delta_alpha):
+        delta_alpha = delta_alpha if delta_alpha > 0.0 else 0.0
 
     if m == 1:
         return cl_cd_max
